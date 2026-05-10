@@ -22,14 +22,14 @@ AI-powered A-share trading journal for Obsidian. Opens a sidebar chat that walks
 
 ### Manual
 
-1. Download `main.js`, `manifest.json`, `styles.css` from the [latest release](https://github.com/YOUR_USERNAME/trading-journal-obsidian/releases/latest)
+1. Download `main.js`, `manifest.json`, `styles.css` from the [latest release](https://github.com/Sia12345678/trading-journal-obsidian/releases/latest)
 2. Copy them to `YOUR_VAULT/.obsidian/plugins/trading-journal/`
 3. Reload Obsidian → Settings → Community plugins → Enable **Trading Journal**
 
 ### BRAT (beta)
 
 1. Install [BRAT](https://github.com/TfTHacker/obsidian42-brat)
-2. BRAT → Add Beta Plugin → `YOUR_USERNAME/trading-journal-obsidian`
+2. BRAT → Add Beta Plugin → `Sia12345678/trading-journal-obsidian`
 
 ## Setup
 
@@ -75,7 +75,7 @@ Files written at the end of each session:
 ## Development
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/trading-journal-obsidian
+git clone https://github.com/Sia12345678/trading-journal-obsidian
 cd trading-journal-obsidian
 npm install
 npm run dev        # watch mode — rebuilds main.js on save
@@ -121,7 +121,7 @@ The workflow builds the plugin and attaches `main.js`, `manifest.json`, `styles.
      "name": "Trading Journal",
      "author": "Your Name",
      "description": "AI-powered A-share trading journal with market data auto-fetch and behavioral reflection.",
-     "repo": "YOUR_USERNAME/trading-journal-obsidian"
+     "repo": "Sia12345678/trading-journal-obsidian"
    }
    ```
 4. Open a PR — review typically takes 2–6 weeks
