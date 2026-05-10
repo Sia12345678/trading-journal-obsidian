@@ -1,6 +1,8 @@
 # Trading Journal — Obsidian Plugin
 
-AI-powered A-share trading journal for Obsidian. Opens a sidebar chat that walks you through the end-of-day review: market data auto-fetch, portfolio snapshot parsing, trade log, and behavioral finance reflection.
+[中文说明](README_CN.md)
+
+AI-powered trading journal for Obsidian. Opens a sidebar chat that walks you through the end-of-day review: market data auto-fetch, portfolio snapshot parsing, trade log, and behavioral finance reflection.
 
 ## Features
 
