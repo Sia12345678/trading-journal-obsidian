@@ -2,12 +2,23 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import { PROVIDERS, ProviderId } from './api/types';
 import TradingJournalPlugin from './main';
 
+export type PrimaryMarket = 'a_share' | 'us' | 'hk' | 'crypto' | 'other';
+
+export const MARKET_NAMES: Record<PrimaryMarket, string> = {
+  a_share: 'A股（沪深）',
+  us: '美股',
+  hk: '港股',
+  crypto: '加密货币',
+  other: '其他 / 多市场',
+};
+
 export interface TradingJournalSettings {
   provider: ProviderId;
   apiKey: string;
   model: string;
   customBaseUrl: string;
   journalPath: string;
+  primaryMarket: PrimaryMarket;
 }
 
 export const DEFAULT_SETTINGS: TradingJournalSettings = {
@@ -16,6 +27,7 @@ export const DEFAULT_SETTINGS: TradingJournalSettings = {
   model: 'deepseek-chat',
   customBaseUrl: '',
   journalPath: '',
+  primaryMarket: 'a_share',
 };
 
 export class TradingJournalSettingTab extends PluginSettingTab {
@@ -26,6 +38,21 @@ export class TradingJournalSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    // Primary market
+    new Setting(containerEl)
+      .setName('主要交易市场')
+      .setDesc('影响市场数据来源和对话内容')
+      .addDropdown(drop => {
+        for (const [id, name] of Object.entries(MARKET_NAMES)) {
+          drop.addOption(id, name);
+        }
+        drop.setValue(this.plugin.settings.primaryMarket);
+        drop.onChange(async (value) => {
+          this.plugin.settings.primaryMarket = value as PrimaryMarket;
+          await this.plugin.saveSettings();
+        });
+      });
 
     // Provider
     new Setting(containerEl)
@@ -39,15 +66,13 @@ export class TradingJournalSettingTab extends PluginSettingTab {
         drop.onChange(async (value) => {
           this.plugin.settings.provider = value as ProviderId;
           const cfg = PROVIDERS[value as ProviderId];
-          if (cfg.defaultModel) {
-            this.plugin.settings.model = cfg.defaultModel;
-          }
+          if (cfg.defaultModel) this.plugin.settings.model = cfg.defaultModel;
           await this.plugin.saveSettings();
-          this.display(); // re-render to show/hide custom URL
+          this.display();
         });
       });
 
-    // Custom base URL (only for 'custom' provider)
+    // Custom base URL
     if (this.plugin.settings.provider === 'custom') {
       new Setting(containerEl)
         .setName('API Base URL')
@@ -64,7 +89,6 @@ export class TradingJournalSettingTab extends PluginSettingTab {
     // API Key
     new Setting(containerEl)
       .setName('API Key')
-      .setDesc('留空则使用环境变量中的 key（如已配置）')
       .addText(text => {
         text.inputEl.type = 'password';
         text
@@ -78,13 +102,9 @@ export class TradingJournalSettingTab extends PluginSettingTab {
 
     // Model
     const providerCfg = PROVIDERS[this.plugin.settings.provider];
-    const modelDesc = providerCfg.models.length
-      ? `推荐：${providerCfg.models.join('、')}`
-      : '填写模型名称';
-
     new Setting(containerEl)
       .setName('模型')
-      .setDesc(modelDesc)
+      .setDesc(providerCfg.models.length ? `推荐：${providerCfg.models.join('、')}` : '填写模型名称')
       .addText(text => text
         .setPlaceholder(providerCfg.defaultModel || 'model-name')
         .setValue(this.plugin.settings.model)

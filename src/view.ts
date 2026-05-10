@@ -108,7 +108,7 @@ export class TradingJournalView extends ItemView {
 
     // Fetch market data and last portfolio in parallel
     const [marketSnapshot, portfolio] = await Promise.all([
-      fetchMarketSnapshot().catch(() => '（市场数据获取失败）'),
+      fetchMarketSnapshot(settings.primaryMarket).catch(() => '（市场数据获取失败）'),
       this.journalManager.readLastPortfolio().catch(() => ({ aShares: '', hkShares: '' })),
     ]);
 
@@ -117,7 +117,7 @@ export class TradingJournalView extends ItemView {
       lastPortfolioRows(portfolio.hkShares),
     ].filter(Boolean).join('\n');
 
-    const systemPrompt = buildSystemPrompt(marketSnapshot, lastPortfolio, today, weekday);
+    const systemPrompt = buildSystemPrompt(marketSnapshot, lastPortfolio, today, weekday, settings.primaryMarket);
     this.messages.unshift({ role: 'system', content: systemPrompt });
 
     await this.callLLM();
