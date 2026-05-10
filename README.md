@@ -59,6 +59,18 @@ Files written at the end of each session:
 | `持仓记录.csv` | A-share portfolio history (CNY) |
 | `持仓记录_港股.csv` | HK-share portfolio history (HKD) |
 
+## External Services
+
+This plugin makes network requests to the following third-party services to fetch market data. No personal data is sent — only public market symbol lookups.
+
+| Service | Purpose | Privacy Policy |
+|---------|---------|----------------|
+| [East Money](https://www.eastmoney.com) (东方财富) | A-share index data (Shanghai, Shenzhen, ChiNext) | [link](https://www.eastmoney.com/about/html/privacy.html) |
+| [Yahoo Finance](https://finance.yahoo.com) | US / HK stock and index quotes | [link](https://legal.yahoo.com/us/en/yahoo/privacy/index.html) |
+| [CoinGecko](https://www.coingecko.com) | Cryptocurrency prices | [link](https://www.coingecko.com/en/privacy) |
+
+All AI inference calls go directly from your device to the AI provider you configure (Anthropic, OpenAI, etc.). Conversation data is not routed through any intermediate server.
+
 ## Supported Providers
 
 | Provider | API Docs |

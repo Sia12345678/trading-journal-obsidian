@@ -3,8 +3,8 @@
   "name": "Trading Journal",
   "version": "0.1.0",
   "minAppVersion": "1.4.0",
-  "description": "AI-powered A-share trading journal. Supports Claude, GPT, DeepSeek, Qwen, Kimi and more.",
-  "author": "",
-  "authorUrl": "",
+  "description": "A simple AI-powered trading journal. Supports stocks (A-share, US, HK), crypto, and more.",
+  "author": "Sia12345678",
+  "authorUrl": "https://github.com/Sia12345678",
   "isDesktopOnly": false
 }
