@@ -1,0 +1,10 @@
+{
+  "id": "trading-journal",
+  "name": "Trading Journal",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "AI-powered A-share trading journal. Supports Claude, GPT, DeepSeek, Qwen, Kimi and more.",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
