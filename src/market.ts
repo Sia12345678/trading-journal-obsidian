@@ -1,3 +1,4 @@
+import { requestUrl } from 'obsidian';
 import { PrimaryMarket } from './settings';
 
 export async function fetchMarketSnapshot(market: PrimaryMarket): Promise<string> {
@@ -16,10 +17,10 @@ interface EastMoneyData { f43?: number; f170?: number; f48?: number }
 
 async function eastMoney(secid: string): Promise<{ price: number; changePct: number; volume: number } | null> {
   try {
-    const res = await fetch(
+    const res = await requestUrl(
       `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f170,f48&fltt=2&invt=2`
     );
-    const d: { data?: EastMoneyData } = await res.json();
+    const d = res.json as { data?: EastMoneyData };
     if (!d.data?.f43) return null;
     return { price: d.data.f43, changePct: d.data.f170 ?? 0, volume: d.data.f48 ?? 0 };
   } catch { return null; }
@@ -40,7 +41,7 @@ async function fetchAShare(): Promise<string> {
   return [fmt(sh, '上证综指'), fmt(sz, '深证成指'), fmt(cy, '创业板指'), vol].join('\n');
 }
 
-// ── 港股：东方财富恒指 + Yahoo Finance 补充 ──────────────────────────────────
+// ── 港股：Yahoo Finance ───────────────────────────────────────────────────────
 
 async function fetchHK(): Promise<string> {
   const [hsi, hscei, hst] = await Promise.all([
@@ -81,10 +82,10 @@ async function fetchUS(): Promise<string> {
 
 async function fetchCrypto(): Promise<string> {
   try {
-    const res = await fetch(
+    const res = await requestUrl(
       'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true'
     );
-    const data: Record<string, { usd: number; usd_24h_change: number }> = await res.json();
+    const data = res.json as Record<string, { usd: number; usd_24h_change: number }>;
     const fmt = (id: string, symbol: string) => {
       const d = data[id];
       if (!d) return `${symbol}: —`;
@@ -98,11 +99,11 @@ async function fetchCrypto(): Promise<string> {
 
 async function yahooQuote(symbol: string): Promise<{ price: number; changePct: number } | null> {
   try {
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
-      { headers: { 'User-Agent': 'Mozilla/5.0' } }
-    );
-    const json = await res.json();
+    const res = await requestUrl({
+      url: `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    const json = res.json as { chart?: { result?: { meta?: { regularMarketPrice?: number; regularMarketChangePercent?: number } }[] } };
     const meta = json?.chart?.result?.[0]?.meta;
     if (!meta?.regularMarketPrice) return null;
     return {

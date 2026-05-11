@@ -12,8 +12,7 @@ export class TradingJournalView extends ItemView {
   private chatEl!: HTMLElement;
   private inputEl!: HTMLTextAreaElement;
   private sendBtn!: HTMLButtonElement;
-  private abortController: AbortController | null = null;
-  private isStreaming = false;
+  private isLoading = false;
   private journalManager!: JournalManager;
 
   constructor(
@@ -27,7 +26,7 @@ export class TradingJournalView extends ItemView {
   getDisplayText() { return '交易日志'; }
   getIcon() { return 'notebook-pen'; }
 
-  async onOpen() {
+  onOpen(): Promise<void> {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();
     container.addClass('tj-container');
@@ -50,29 +49,29 @@ export class TradingJournalView extends ItemView {
     this.inputEl.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        this.send();
+        void this.send();
       }
     });
 
     this.sendBtn = inputArea.createEl('button', { text: '发送', cls: 'tj-send-btn' });
-    this.sendBtn.onclick = () => this.send();
+    this.sendBtn.onclick = () => { void this.send(); };
+    return Promise.resolve();
   }
 
-  async onClose() {
-    this.abortController?.abort();
+  onClose(): Promise<void> {
+    return Promise.resolve();
   }
 
   private reset() {
-    this.abortController?.abort();
     this.messages = [];
     this.chatEl.empty();
     this.inputEl.value = '';
-    this.setStreaming(false);
+    this.setLoading(false);
   }
 
   private async send() {
     const text = this.inputEl.value.trim();
-    if (!text || this.isStreaming) return;
+    if (!text || this.isLoading) return;
 
     this.inputEl.value = '';
     this.appendMessage('user', text);
@@ -87,17 +86,17 @@ export class TradingJournalView extends ItemView {
   }
 
   private async initialize() {
-    this.setStreaming(true);
+    this.setLoading(true);
     const settings = this.getSettings();
 
     if (!settings.apiKey) {
       new Notice('请先在设置中填写 API Key');
-      this.setStreaming(false);
+      this.setLoading(false);
       return;
     }
     if (!settings.journalPath) {
       new Notice('请先在设置中填写交易日记文件夹路径');
-      this.setStreaming(false);
+      this.setLoading(false);
       return;
     }
 
@@ -124,7 +123,7 @@ export class TradingJournalView extends ItemView {
   }
 
   private async callLLM() {
-    this.setStreaming(true);
+    this.setLoading(true);
     const settings = this.getSettings();
 
     const client = createClient(
@@ -134,18 +133,12 @@ export class TradingJournalView extends ItemView {
       settings.customBaseUrl,
     );
 
-    this.abortController = new AbortController();
-    const assistantEl = this.appendMessage('assistant', '');
+    const assistantEl = this.appendMessage('assistant', '…');
 
     try {
       const result = await client.chat({
         messages: this.messages,
         tools: [SAVE_JOURNAL_TOOL],
-        signal: this.abortController.signal,
-        onChunk: (chunk) => {
-          assistantEl.querySelector('.tj-message-content')!.textContent += chunk;
-          this.chatEl.scrollTop = this.chatEl.scrollHeight;
-        },
       });
 
       // Store assistant message
@@ -156,23 +149,23 @@ export class TradingJournalView extends ItemView {
       };
       this.messages.push(assistantMsg);
 
-      // Re-render markdown
+      // Render markdown
       const contentEl = assistantEl.querySelector('.tj-message-content') as HTMLElement;
       contentEl.empty();
       await MarkdownRenderer.render(this.app, result.content, contentEl, '', this);
+      this.chatEl.scrollTop = this.chatEl.scrollHeight;
 
       // Handle tool calls
       if (result.toolCalls?.length) {
         await this.handleToolCalls(result.toolCalls);
       }
     } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        const msg = `错误：${(err as Error).message}`;
-        assistantEl.querySelector('.tj-message-content')!.textContent = msg;
-        new Notice(msg);
-      }
+      const msg = `错误：${(err as Error).message}`;
+      const contentEl = assistantEl.querySelector('.tj-message-content') as HTMLElement;
+      contentEl.textContent = msg;
+      new Notice(msg);
     } finally {
-      this.setStreaming(false);
+      this.setLoading(false);
     }
   }
 
@@ -216,8 +209,8 @@ export class TradingJournalView extends ItemView {
     return el;
   }
 
-  private setStreaming(on: boolean) {
-    this.isStreaming = on;
+  private setLoading(on: boolean) {
+    this.isLoading = on;
     this.sendBtn.disabled = on;
     this.sendBtn.textContent = on ? '…' : '发送';
   }

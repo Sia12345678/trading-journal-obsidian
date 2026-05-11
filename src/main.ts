@@ -11,17 +11,17 @@ export default class TradingJournalPlugin extends Plugin {
     this.registerView(VIEW_TYPE, leaf => new TradingJournalView(leaf, () => this.settings));
 
     this.addCommand({
-      id: 'open-trading-journal',
+      id: 'open',
       name: '开始今日交易日志',
-      callback: () => this.openJournal(),
+      callback: () => { void this.openJournal(); },
     });
 
-    this.addRibbonIcon('notebook-pen', '交易日志', () => this.openJournal());
+    this.addRibbonIcon('notebook-pen', '交易日志', () => { void this.openJournal(); });
     this.addSettingTab(new TradingJournalSettingTab(this.app, this));
   }
 
-  async onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+  onunload() {
+    // no-op: Obsidian handles leaf cleanup
   }
 
   async loadSettings() {

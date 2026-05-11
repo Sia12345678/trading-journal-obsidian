@@ -88,8 +88,6 @@ export interface Tool {
 export interface ChatOptions {
   messages: Message[];
   tools?: Tool[];
-  onChunk?: (text: string) => void;
-  signal?: AbortSignal;
 }
 
 export interface ChatResult {

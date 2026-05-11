@@ -1,3 +1,4 @@
+import { requestUrl } from 'obsidian';
 import { ChatClient, ChatOptions, ChatResult, Message, Tool, ToolCall } from './types';
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
@@ -10,8 +11,7 @@ export class AnthropicClient implements ChatClient {
   ) {}
 
   async chat(options: ChatOptions): Promise<ChatResult> {
-    const { messages, tools, onChunk, signal } = options;
-    const stream = !!onChunk;
+    const { messages, tools } = options;
 
     const systemMsg = messages.find(m => m.role === 'system');
     const chatMessages = messages.filter(m => m.role !== 'system').map(toAnthropicMessage);
@@ -21,11 +21,12 @@ export class AnthropicClient implements ChatClient {
       max_tokens: 8192,
       system: systemMsg?.content,
       messages: chatMessages,
-      stream,
+      stream: false,
     };
     if (tools?.length) body.tools = tools.map(toAnthropicTool);
 
-    const response = await fetch(API_URL, {
+    const response = await requestUrl({
+      url: API_URL,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -34,71 +35,16 @@ export class AnthropicClient implements ChatClient {
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify(body),
-      signal,
+      throw: false,
     });
 
-    if (!response.ok) {
-      throw new Error(`Anthropic API ${response.status}: ${await response.text()}`);
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`Anthropic API ${response.status}: ${response.text}`);
     }
 
-    if (!stream) {
-      const data = await response.json();
-      return fromAnthropicResponse(data);
-    }
-
-    return this.consumeStream(response, onChunk!);
-  }
-
-  private async consumeStream(
-    response: Response,
-    onChunk: (text: string) => void,
-  ): Promise<ChatResult> {
-    const reader = response.body!.getReader();
-    const decoder = new TextDecoder();
-    let content = '';
-    const toolUseBlocks: Record<string, { id: string; name: string; input: string }> = {};
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      for (const line of decoder.decode(value).split('\n')) {
-        if (!line.startsWith('data: ')) continue;
-
-        let parsed: Record<string, unknown>;
-        try { parsed = JSON.parse(line.slice(6)); } catch { continue; }
-
-        const type = parsed.type as string;
-
-        if (type === 'content_block_start') {
-          const block = parsed.content_block as { type: string; id?: string; name?: string };
-          if (block.type === 'tool_use' && block.id) {
-            toolUseBlocks[block.id] = { id: block.id, name: block.name ?? '', input: '' };
-          }
-        }
-
-        if (type === 'content_block_delta') {
-          const delta = parsed.delta as { type: string; text?: string; partial_json?: string };
-          if (delta.type === 'text_delta' && delta.text) {
-            content += delta.text;
-            onChunk(delta.text);
-          }
-          if (delta.type === 'input_json_delta' && delta.partial_json) {
-            // Find the current tool block (last started one)
-            const lastId = Object.keys(toolUseBlocks).at(-1);
-            if (lastId) toolUseBlocks[lastId].input += delta.partial_json;
-          }
-        }
-      }
-    }
-
-    const toolCalls: ToolCall[] = Object.values(toolUseBlocks).map(b => ({
-      id: b.id,
-      name: b.name,
-      arguments: JSON.parse(b.input || '{}'),
-    }));
-
-    return { content, toolCalls: toolCalls.length ? toolCalls : undefined };
+    return fromAnthropicResponse(response.json as {
+      content: { type: string; text?: string; id?: string; name?: string; input?: unknown }[];
+    });
   }
 }
 
