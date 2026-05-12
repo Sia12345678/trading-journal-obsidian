@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { TradingJournalSettingTab, TradingJournalSettings, DEFAULT_SETTINGS } from './settings';
 import { TradingJournalView, VIEW_TYPE } from './view';
 
@@ -35,12 +35,12 @@ export default class TradingJournalPlugin extends Plugin {
   private async openJournal() {
     const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE);
     if (existing.length) {
-      this.app.workspace.revealLeaf(existing[0]);
+      await this.app.workspace.revealLeaf(existing[0]);
       return;
     }
     const leaf = this.app.workspace.getRightLeaf(false);
     if (!leaf) return;
     await leaf.setViewState({ type: VIEW_TYPE, active: true });
-    this.app.workspace.revealLeaf(leaf);
+    await this.app.workspace.revealLeaf(leaf);
   }
 }

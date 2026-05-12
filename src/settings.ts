@@ -75,7 +75,7 @@ export class TradingJournalSettingTab extends PluginSettingTab {
     // Custom base URL
     if (this.plugin.settings.provider === 'custom') {
       new Setting(containerEl)
-        .setName('API Base URL')
+        .setName('API base URL')
         .setDesc('OpenAI 兼容接口地址，例如 http://localhost:11434/v1（Ollama）')
         .addText(text => text
           .setPlaceholder('https://...')
@@ -88,7 +88,7 @@ export class TradingJournalSettingTab extends PluginSettingTab {
 
     // API Key
     new Setting(containerEl)
-      .setName('API Key')
+      .setName('API key')
       .addText(text => {
         text.inputEl.type = 'password';
         text

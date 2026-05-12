@@ -59,7 +59,7 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     models: ['glm-4', 'glm-4-flash', 'glm-4-air'],
   },
   custom: {
-    name: '自定义 (Custom)',
+    name: '自定义 (custom)',
     baseUrl: '',
     defaultModel: '',
     models: [],

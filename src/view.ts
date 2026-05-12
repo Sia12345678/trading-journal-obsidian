@@ -90,7 +90,7 @@ export class TradingJournalView extends ItemView {
     const settings = this.getSettings();
 
     if (!settings.apiKey) {
-      new Notice('请先在设置中填写 API Key');
+      new Notice('请先在设置中填写 API key');
       this.setLoading(false);
       return;
     }
